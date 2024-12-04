@@ -5,24 +5,34 @@ const isHeroku = __dirname.startsWith("/skl");
 const isKoyeb = __dirname.startsWith("/rgnk");
 const isRailway = __dirname.startsWith("/railway");
 if (fs.existsSync('config.env')) require('dotenv').config({ path: './config.env' });
-function convertToBool(text, fault = 'true',fault2='on') {
+
+function convertToBool(text, fault = 'true', fault2 = 'on') {
     return ((text === fault) || (text === fault2));
 }
-const settingsMenu = [
-    {title: "PM antispam block", env_var: "PM_ANTISPAM"},
-    {title: "Auto read all messages", env_var: "READ_MESSAGES"},
-    {title: "Auto read command messages", env_var: "READ_COMMAND"},
-    {title: "Auto read status updates", env_var: "AUTO_READ_STATUS"},
-    {title: "Admin sudo acces mode (group commands only)", env_var: "ADMIN_ACCESS"},
-    {title: "With & without handler mode", env_var: "MULTI_HANDLERS"},
-    {title: "Auto reject calls", env_var: "REJECT_CALLS"},
-    {title: "Always online", env_var: "ALWAYS_ONLINE"},
-    {title: "PM Auto blocker", env_var: "PMB_VAR"},
-    {title: "Disable bot in PM", env_var: "DIS_PM"}
-  ]
-DATABASE_URL = process.env.DATABASE_URL === undefined ? './bot.db' : process.env.DATABASE_URL;
-DEBUG = process.env.DEBUG === undefined ? false : convertToBool(process.env.DEBUG);
-if (!(process.env.SESSION || process.env.SESSION_ID)) throw new Error("No session found, add session before starting bot")
+
+// Initialize the session
+const sessionFilePath = './session.json';  // Path to store session data
+
+let session = process.env.SESSION || process.env.SESSION_ID || '';
+
+// If session is not set, check if a session file exists
+if (!session && fs.existsSync(sessionFilePath)) {
+    session = fs.readFileSync(sessionFilePath, 'utf-8');  // Load session from file
+} else if (!session) {
+    // If session does not exist, we initialize a new one
+    console.log("No session found, generating new session...");
+
+    // Example: Assuming you have a bot library for generating session (e.g., Baileys, WhatsApp-web.js)
+    // Replace this part with actual session generation logic
+    // session = await initializeBotSession();  // Call your session creation function
+
+    // For now, we simulate creating a session (this will need to be replaced with actual logic)
+    session = 'new_generated_session';  // Placeholder session
+
+    // Save the session to a file for future use
+    fs.writeFileSync(sessionFilePath, session, 'utf-8');
+}
+
 module.exports = {
     VERSION: 'v4.0.0',
     ALIVE: process.env.ALIVE || "https://i.imgur.com/KCnoMM2.jpg Hey {sender}, I'm alive \n Uptime: {uptime}",
@@ -31,7 +41,7 @@ module.exports = {
     ALWAYS_ONLINE: convertToBool(process.env.ALWAYS_ONLINE) || false,
     MANGLISH_CHATBOT: convertToBool(process.env.MANGLISH_CHATBOT) || false,
     ADMIN_ACCESS: convertToBool(process.env.ADMIN_ACCESS) || false,
-    PLATFORM:isHeroku?"Heroku":isRailway?"Railway":isKoyeb?"Koyeb":"Other server",isHeroku,isKoyeb,isVPS,isRailway,
+    PLATFORM: isHeroku ? "Heroku" : isRailway ? "Railway" : isKoyeb ? "Koyeb" : "Other server",
     AUTOMUTE_MSG: process.env.AUTOMUTE_MSG || '_Group automuted!_\n_(edit AUTOMUTE_MSG)_',
     ANTIWORD_WARN: process.env.ANTIWORD_WARN || '',
     ANTI_SPAM: process.env.ANTI_SPAM || '919074309534-1632403322@g.us',
@@ -49,7 +59,7 @@ module.exports = {
     REJECT_CALLS: convertToBool(process.env.REJECT_CALLS) || false,
     PMB: process.env.PMB || '_Personal messages not allowed, BLOCKED!_',
     READ_COMMAND: convertToBool(process.env.READ_COMMAND) || true,
-    SESSION: (process.env.SESSION || process.env.SESSION_ID || '').trim() || '',
+    SESSION: session.trim() || '', // Use the generated or loaded session
     IMGBB_KEY: ["76a050f031972d9f27e329d767dd988f", "deb80cd12ababea1c9b9a8ad6ce3fab2", "78c84c62b32a88e86daf87dd509a657a"],
     RG: process.env.RG || '919074309534-1632403322@g.us,120363116963909366@g.us',
     BOT_INFO: process.env.BOT_INFO || 'Raganork;Skl11;0;https://i.imgur.com/P7ziVhr.jpeg;https://chat.whatsapp.com/Dt3C4wrQmt0GG6io1IBIHb',
@@ -70,11 +80,11 @@ module.exports = {
         API_KEY: process.env.HEROKU_API_KEY || '',
         APP_NAME: process.env.HEROKU_APP_NAME || ''
     },
-    DATABASE_URL: DATABASE_URL,
-    DATABASE: DATABASE_URL === './bot.db' ? new Sequelize({ dialect: "sqlite", storage: DATABASE_URL, logging: DEBUG }) : new Sequelize(DATABASE_URL, { dialectOptions: { ssl: { require: true, rejectUnauthorized: false } }, logging: DEBUG }),
+    DATABASE_URL: process.env.DATABASE_URL === undefined ? './bot.db' : process.env.DATABASE_URL,
+    DATABASE: process.env.DATABASE_URL === './bot.db' ? new Sequelize({ dialect: "sqlite", storage: process.env.DATABASE_URL, logging: DEBUG }) : new Sequelize(process.env.DATABASE_URL, { dialectOptions: { ssl: { require: true, rejectUnauthorized: false } }, logging: DEBUG }),
     SUDO: process.env.SUDO || "",
     LANGUAGE: process.env.LANGUAGE || 'english',
-    DEBUG: DEBUG,
+    DEBUG: process.env.DEBUG === undefined ? false : convertToBool(process.env.DEBUG),
     ACR_A: "ff489a0160188cf5f0750eaf486eee74",
     ACR_S: "ytu3AdkCu7fkRVuENhXxs9jsOW4YJtDXimAWMpJp",
     settingsMenu

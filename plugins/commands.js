@@ -1,76 +1,86 @@
-/* Copyright (C) 2022 Sourav KL11.
-Licensed under the  GPL-3.0 License;
-you may not use this file except in compliance with the License.
-Raganork MD - Sourav KL11
-*/
-const {
-    commands: commands,
-    Module: Module
-} = require("../main"), {
-    MODE: MODE,
-    HANDLERS: HANDLERS
-} = require("../config"), {
-    FancyRandom: FancyRandom,
-    getListFromCommand: getListFromCommand,
-    skbuffer: skbuffer
-} = require("raganork-bot");
-let w = "public" != MODE;
-const readMore = String.fromCharCode(8206).repeat(4001);
-function getCommands(){
-return commands.map(x=>x?.pattern?.toString().match(/(\W*)([A-Za-zğüşıiöç1234567890 ]*)/)[2].trim())
+const fs = require('fs');
+const { Sequelize } = require('sequelize');
+const isVPS = !(__dirname.startsWith("/rgnk") || __dirname.startsWith("/skl"));
+const isHeroku = __dirname.startsWith("/skl");
+const isKoyeb = __dirname.startsWith("/rgnk");
+const isRailway = __dirname.startsWith("/railway");
+
+if (fs.existsSync('config.env')) require('dotenv').config({ path: './config.env' });
+
+function convertToBool(text, fault = 'true', fault2 = 'on') {
+    return ((text === fault) || (text === fault2));
 }
-function findCommand(command){
-let found_command = commands.filter(x=>x?.pattern?.toString().match(/(\W*)([A-Za-zğüşıiöç1234567890 ]*)/)[2].trim() == command)[0]
-if (!found_command) return false
-return {
-    command, ...found_command
+
+// Load session from environment variable
+const session = process.env.SESSION || process.env.SESSION_ID || '';
+if (!session) {
+    throw new Error("No session found. Please set the SESSION environment variable.");
 }
-}
-Module({
-    pattern: "info ?(.*)",
-    fromMe: w,
-    desc: "Gives command info"
- }, async (n, a) => {
-    var e = "";
-    if (a[1]) {
-        let foundCommand = findCommand(a[1].trim())
-        if (!foundCommand) return await n.sendReply("_No such command!_")
-        let msgToBeSent_ = `_*Command:* ${foundCommand.command}_\n_*Desc:* ${foundCommand.desc}_\n_*Owner command:* ${foundCommand.fromMe}_`
-        if (foundCommand.use) msgToBeSent_+=`\n_*Type:* ${foundCommand.use}_`
-        if (foundCommand.usage) msgToBeSent_+=`\n_*Usage:* ${foundCommand.usage}_`
-        if (foundCommand.warn) msgToBeSent_+=`\n_*Warning:* ${foundCommand.warn}_`
-        return await n.sendReply(msgToBeSent_)        
-    } else return await n.sendReply("_Need a command, example: .info insta_")
-});    
-        Module({
-    pattern: "list ?(.*)",
-    fromMe: w,
-    dontAddCommandList: true
-}, async (n, a) => {
-    var e = "";
-    if (a[1]) {
-        let foundCommand = findCommand(a[1].trim())
-        if (!foundCommand) return await n.sendReply("_No such command!_")
-        let msgToBeSent_ = `_*Command:* ${foundCommand.command}_\n_*Desc:* ${foundCommand.desc}_\n_*Owner command:* ${foundCommand.fromMe}_`
-        if (foundCommand.use) msgToBeSent_+=`\n_*Type:* ${foundCommand.use}_`
-        if (foundCommand.usage) msgToBeSent_+=`\n_*Usage:* ${foundCommand.usage}_`
-        if (foundCommand.warn) msgToBeSent_+=`\n_*Warning:* ${foundCommand.warn}_`
-        return await n.sendReply(msgToBeSent_)        
-    } else {
-        commands.map(async n => {
-            if (!n.dontAddCommandList && void 0 !== n.pattern) {
-                try {
-                    var a = n.pattern.toString().match(/(\W*)([A-Za-zğüşıiöç1234567890 ]*)/),
-                        t = n.pattern.toString().match(/(\W*)([A-Za-züşiğ öç1234567890]*)/)[2]
-                } catch {
-                    a = [n.pattern]
-                }
-                var r = "";
-                r = /\[(\W*)\]/.test(HANDLERS) ? HANDLERS.match(/\[(\W*)\]/)[1][0] : ".", "" == n.desc && "" == !n.usage && "" == n.warn && (e += (a.length >= 3 ? r + t : n.pattern) + "\nExample:: " + n.usage + "\n\n"), "" == !n.desc && "" == n.usage && "" == n.warn && (e += (a.length >= 3 ? r + t : n.pattern) + "\n" + n.desc + " \n\n"), "" == n.desc && "" == n.usage && "" == !n.warn && (e += (a.length >= 3 ? r + t : n.pattern) + "\n" + n.warn + "\n\n"), "" == !n.desc && "" == !n.usage && "" == n.warn && (e += (a.length >= 3 ? r + t : n.pattern) + "\n" + n.desc + " \n" + "Example" + ": " + n.usage + "\n\n"), "" == !n.desc && "" == n.usage && "" == !n.warn && (e += (a.length >= 3 ? r + t : n.pattern) + "\n" + n.desc + " \n" + "Warning" + ": " + n.warn + "\n\n"), "" == n.desc && "" == !n.usage && "" == !n.warn && (e += (a.length >= 3 ? r + t : n.pattern) + "\n" + n.usage + "\n" + "Warning" + ": " + n.warn + "\n\n"), "" == n.desc && "" == n.usage && "" == n.warn && (e += (a.length >= 3 ? r + t : n.pattern) + "\n\n"), "" == !n.desc && "" == !n.usage && "" == !n.warn && (e += (a.length >= 3 ? r + t : n.pattern) + "\n" + n.desc + " \n" + "Example" + ": " + n.usage + "\n" + "Warning" + ": " + n.warn + "\n\n")
-            }
-        });
-        var t = FancyRandom(e);
-        await n.sendReply(t)
-    }
-});
-module.exports = {getCommands};
+
+module.exports = {
+    VERSION: 'v4.0.0',
+    ALIVE: process.env.ALIVE || "https://i.imgur.com/KCnoMM2.jpg Hey {sender}, I'm alive \n Uptime: {uptime}",
+    BLOCK_CHAT: process.env.BLOCK_CHAT || '',
+    PM_ANTISPAM: convertToBool(process.env.PM_ANTISPAM) || '',
+    ALWAYS_ONLINE: convertToBool(process.env.ALWAYS_ONLINE) || false,
+    MANGLISH_CHATBOT: convertToBool(process.env.MANGLISH_CHATBOT) || false,
+    ADMIN_ACCESS: convertToBool(process.env.ADMIN_ACCESS) || false,
+    PLATFORM: isHeroku ? "Heroku" : isRailway ? "Railway" : isKoyeb ? "Koyeb" : "Other server",
+    AUTOMUTE_MSG: process.env.AUTOMUTE_MSG || '_Group automuted!_\n_(edit AUTOMUTE_MSG)_',
+    ANTIWORD_WARN: process.env.ANTIWORD_WARN || '',
+    ANTI_SPAM: process.env.ANTI_SPAM || '919074309534-1632403322@g.us',
+    MULTI_HANDLERS: convertToBool(process.env.MULTI_HANDLERS) || false,
+    DISABLE_START_MESSAGE: convertToBool(process.env.DISABLE_START_MESSAGE) || false,
+    NOLOG: process.env.NOLOG || false,
+    DISABLED_COMMANDS: (process.env.DISABLED_COMMANDS ? process.env.DISABLED_COMMANDS.split(",") : undefined) || [],
+    ANTI_BOT: process.env.ANTI_BOT || '',
+    ANTISPAM_COUNT: process.env.ANTISPAM_COUNT || '6/10', // msgs/sec
+    AUTOUNMUTE_MSG: process.env.AUTOUNMUTE_MSG || '_Group auto unmuted!_\n_(edit AUTOUNMUTE_MSG)_',
+    AUTO_READ_STATUS: convertToBool(process.env.AUTO_READ_STATUS) || false,
+    READ_MESSAGES: convertToBool(process.env.READ_MESSAGES) || false,
+    PMB_VAR: convertToBool(process.env.PMB_VAR) || false,
+    DIS_PM: convertToBool(process.env.DIS_PM) || false,
+    REJECT_CALLS: convertToBool(process.env.REJECT_CALLS) || false,
+    PMB: process.env.PMB || '_Personal messages not allowed, BLOCKED!_',
+    READ_COMMAND: convertToBool(process.env.READ_COMMAND) || true,
+    SESSION: session.trim(), // Use the session from environment variables
+    IMGBB_KEY: ["76a050f031972d9f27e329d767dd988f", "deb80cd12ababea1c9b9a8ad6ce3fab2", "78c84c62b32a88e86daf87dd509a657a"],
+    RG: process.env.RG || '919074309534-1632403322@g.us,120363116963909366@g.us',
+    BOT_INFO: process.env.BOT_INFO || 'Ernest;Skl11;0;https://i.imgur.com/P7ziVhr.jpeg;https://chat.whatsapp.com/Dt3C4wrQmt0GG6io1IBIHb',
+    RBG_KEY: process.env.RBG_KEY || '',
+    ALLOWED: process.env.ALLOWED || '91,94,2',
+    NOT_ALLOWED: process.env.ALLOWED || '91,94,212',
+    CHATBOT: process.env.CHATBOT || 'off',
+    HANDLERS: process.env.HANDLERS || '.,',
+    STICKER_DATA: process.env.STICKER_DATA || "Ernest",
+    BOT_NAME: process.env.BOT_NAME || 'Ernest',
+    AUDIO_DATA: process.env.AUDIO_DATA === undefined || process.env.AUDIO_DATA === "private" ? 'ꪶ͢٭𝑺𝜣𝑼𝑹𝛢𝑽𝑲𝑳¹¹ꫂ;Ernest MD bot;https://i.imgur.com/P7ziVhr.jpeg' : process.env.AUDIO_DATA,
+    TAKE_KEY: process.env.TAKE_KEY || '',
+    MODE: process.env.MODE || 'private',
+    WARN: process.env.WARN || '4',
+    ANTILINK_WARN: process.env.ANTILINK_WARN || '',
+    HEROKU: {
+        HEROKU: process.env.HEROKU === undefined ? false : convertToBool(process.env.HEROKU),
+        API_KEY: process.env.HEROKU_API_KEY || '',
+        APP_NAME: process.env.HEROKU_APP_NAME || ''
+    },
+    DATABASE_URL: process.env.DATABASE_URL === undefined ? './bot.db' : process.env.DATABASE_URL,
+    DATABASE: process.env.DATABASE_URL === './bot.db' ? new Sequelize({ dialect: "sqlite", storage: process.env.DATABASE_URL, logging: DEBUG }) : new Sequelize(process.env.DATABASE_URL, { dialectOptions: { ssl: { require: true, rejectUnauthorized: false } }, logging: DEBUG }),
+    SUDO: process.env.SUDO || "",
+    LANGUAGE: process.env.LANGUAGE || 'english',
+    DEBUG: process.env.DEBUG === undefined ? false : convertToBool(process.env.DEBUG),
+    ACR_A: "ff489a0160188cf5f0750eaf486eee74",
+    ACR_S: "ytu3AdkCu7fkRVuENhXxs9jsOW4YJtDXimAWMpJp",
+    settingsMenu: [
+        { title: "PM antispam block", env_var: "PM_ANTISPAM" },
+        { title: "Auto read all messages", env_var: "READ_MESSAGES" },
+        { title: "Auto read command messages", env_var: "READ_COMMAND" },
+        { title: "Auto read status updates", env_var: "AUTO_READ_STATUS" },
+        { title: "Admin sudo access mode (group commands only)", env_var: "ADMIN_ACCESS" },
+        { title: "With & without handler mode", env_var: "MULTI_HANDLERS" },
+        { title: "Auto reject calls", env_var: "REJECT_CALLS" },
+        { title: "Always online", env_var: "ALWAYS_ONLINE" },
+        { title: "PM Auto blocker", env_var: "PMB_VAR" },
+        { title: "Disable bot in PM", env_var: "DIS_PM" }
+    ]
+};
