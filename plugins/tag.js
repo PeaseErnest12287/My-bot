@@ -1,14 +1,18 @@
-/* Copyright (C) 2022 Sourav KL11.
-Licensed under the  GPL-3.0 License;
-you may not use this file except in compliance with the License.
-Raganork MD - Sourav KL11
-*/
-const {Module} = require('../main')
-const {getString} = require('./misc/lang');
-const {readFileSync} = require('fs');
-const {saveMessage} = require('./misc/saveMessage');
+// main.js
+
+const { Module } = require('../main');
+const { getString } = require('./misc/lang');
+const { readFileSync } = require('fs');
+const { saveMessage } = require('./misc/saveMessage');
 const Lang = getString('group');
-Module({pattern: 'tag ?(.*)', use: 'group', fromMe: true, desc: "Tag all members or specific users"}, (async (message, match) => {
+
+// Tag all members or specific users
+Module({
+    pattern: 'tag ?(.*)', 
+    use: 'group', 
+    fromMe: true, 
+    desc: "Tag all members or specific users"
+}, (async (message, match) => {
     // Delete the original command message
     await message.delete();
 
@@ -36,7 +40,13 @@ Module({pattern: 'tag ?(.*)', use: 'group', fromMe: true, desc: "Tag all members
     await message.sendReply("Tagging complete!"); // Custom reply after tagging
 }));
 
-Module({pattern: 'forward ?(.*)', use: 'utility', fromMe: true, desc: "Forwards a message to specified users"}, (async (message, match) => {
+// Forward message to specified users
+Module({
+    pattern: 'forward ?(.*)', 
+    use: 'utility', 
+    fromMe: true, 
+    desc: "Forwards a message to specified users"
+}, (async (message, match) => {
     // Delete the original command message
     await message.delete();
 
@@ -48,7 +58,14 @@ Module({pattern: 'forward ?(.*)', use: 'utility', fromMe: true, desc: "Forwards 
     }
     await message.sendReply("Message forwarded successfully!"); // Confirmation message
 }));
-Module({pattern: 'send ?(.*)', use: 'utility', fromMe: true, desc: "Sends a message to specified users"}, (async (message, match) => {
+
+// Send message to specified users
+Module({
+    pattern: 'send ?(.*)', 
+    use: 'utility', 
+    fromMe: true, 
+    desc: "Sends a message to specified users"
+}, (async (message, match) => {
     // Delete the original command message
     await message.delete();
 
@@ -63,7 +80,14 @@ Module({pattern: 'send ?(.*)', use: 'utility', fromMe: true, desc: "Sends a mess
     }
     await message.sendReply("Messages sent successfully!"); // Final message after sending
 }));
-Module({pattern: 'info ?(me)?', use: 'utility', fromMe: true, desc: "Display bot information"}, (async (message, match) => {
+
+// Show bot information
+Module({
+    pattern: 'info ?(me)?', 
+    use: 'utility', 
+    fromMe: true, 
+    desc: "Display bot information"
+}, (async (message, match) => {
     // Delete the original command message
     await message.delete();
 
@@ -81,7 +105,14 @@ Module({pattern: 'info ?(me)?', use: 'utility', fromMe: true, desc: "Display bot
         await message.sendReply(infoMessage);
     }
 }));
-Module({pattern: 'help', use: 'utility', fromMe: true, desc: "Displays a list of available commands"}, (async (message) => {
+
+// Display help message
+Module({
+    pattern: 'help', 
+    use: 'utility', 
+    fromMe: true, 
+    desc: "Displays a list of available commands"
+}, (async (message) => {
     // Delete the original command message
     await message.delete();
 
@@ -99,13 +130,20 @@ Module({pattern: 'help', use: 'utility', fromMe: true, desc: "Displays a list of
 `;
     await message.sendReply(helpMessage);
 }));
+
+// Settings for welcome and wait messages
 let settings = {
     welcomeMessage: "Welcome to the group!",
     waitMessage: "Please wait while we process your request."
 };
 
-// Set command to update messages
-Module({pattern: 'set ?(.*)', use: 'utility', fromMe: true, desc: "Set configuration options like welcome and wait messages"}, (async (message, match) => {
+// Set configuration options
+Module({
+    pattern: 'set ?(.*)', 
+    use: 'utility', 
+    fromMe: true, 
+    desc: "Set configuration options like welcome and wait messages"
+}, (async (message, match) => {
     // Delete the original command message
     await message.delete();
 
@@ -129,7 +167,10 @@ Module({pattern: 'set ?(.*)', use: 'utility', fromMe: true, desc: "Set configura
 
 // Auto-reply to specific greetings
 const greetings = ["hi", "hello", "ssup", "yoh", "vipi"];
-Module({pattern: '.*', fromMe: true}, (async (message) => {
+Module({
+    pattern: '.*', 
+    fromMe: true
+}, (async (message) => {
     const text = message.body.toLowerCase();
     if (greetings.some(greeting => text.includes(greeting))) {
         await message.sendReply("Please Ernest here");

@@ -8,6 +8,11 @@
     "repository": "https://github.com/raganork-ind/whatsapp-bot",
     "stack": "container",
     "env": {
+      "ALLOW_UPDATES": {
+        "description": "Allows bot to check for updates automatically",
+        "required": false,
+        "value": "true"
+      },
       "HANDLERS": {
         "description": "Prefix of commands. Can be also false",
         "required": true,
