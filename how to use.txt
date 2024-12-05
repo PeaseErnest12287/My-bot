@@ -1,0 +1,77 @@
+WhatsApp Bot Commands
+
+- **.tag [all | admin]**
+  - **Description**: Tags all participants in a group or only the admins.
+  - **Usage**:
+    - To tag all members: `.tag all`
+    - To tag only admins: `.tag admin`
+  - **Note**: You must reply to a message for this command to work. This is useful for getting everyone's attention in a group chat.
+
+- **.forward [jid1 jid2 ...]**
+  - **Description**: Forwards a replied message to specified users or groups.
+  - **Usage**:
+    - To forward to a specific user: `.forward 1234567890@s.whatsapp.net`
+    - To forward to multiple users: `.forward 1234567890@s.whatsapp.net 0987654321@s.whatsapp.net`
+  - **Note**: You must reply to a message for this command to work. This is helpful for sharing important messages with others.
+
+- **.send [jid1 jid2 ...]**
+  - **Description**: Sends a replied message to specified users or groups.
+  - **Usage**:
+    - To send to a specific user: `.send 1234567890@s.whatsapp.net`
+    - To send to multiple users: `.send 1234567890@s.whatsapp.net 0987654321@s.whatsapp.net`
+    - To send to a group: `.send 1234567890-g@group.us`
+  - **Note**: You must reply to a message for this command to work. This is useful for directly sharing messages with others.
+
+- **.help**
+  - **Description**: Displays a list of available commands and their descriptions.
+  - **Usage**: Simply type `.help`
+  - **Note**: This command is useful for users to understand what commands are available and how to use them.
+
+- **.info**
+  - **Description**: Provides information about the bot or the current chat.
+  - **Usage**: Simply type `.info`
+  - **Note**: This command can give users context about the bot's capabilities or details about the group chat.
+
+- **.kick [jid]**
+  - **Description**: Removes a specified user from the group.
+  - **Usage**: `.kick 1234567890@s.whatsapp.net`
+  - **Note**: Only admins can use this command. This is useful for managing group membership.
+
+- **.ban [jid]**
+  - **Description**: Bans a specified user from the group.
+  - **Usage**: `.ban 1234567890@s.whatsapp.net`
+  - **Note**: Only admins can use this command. This prevents a user from rejoining the group.
+
+- **.unban [jid]**
+  - **Description**: Unbans a previously banned user.
+  - **Usage**: `.unban 1234567890@s.whatsapp.net`
+  - **Note**: Only admins can use this command. This allows previously banned users to rejoin the group.
+
+- **.mute [duration]**
+  - **Description**: Mutes the group for a specified duration.
+  - **Usage**: `.mute 30m` (for 30 minutes)
+  - **Note**: Only admins can use this command. This is useful for managing group noise during events.
+
+- **.unmute**
+  - **Description**: Unmutes the group.
+  - **Usage**: Simply type `.unmute`
+  - **Note**: Only admins can use this command. This allows group members to start chatting again.
+
+- **.setwelcome [message]**
+  - **Description**: Sets a welcome message for new group members.
+  - **Usage**: `.setwelcome Welcome to the group!`
+  - **Note**: Only admins can use this command. This helps in greeting new members.
+
+- **.setfarewell [message]**
+  - **Description**: Sets a farewell message for when members leave the group.
+  - **Usage**: `.setfarewell Goodbye! We will miss you!`
+  - **Note**: Only admins can use this command. This helps in acknowledging members who leave.
+
+- **.poll [question] [option1] [option2] ...**
+  - **Description**: Creates a poll with the specified question and options.
+  - **Usage**: `.poll What is your favorite color? Red Blue Green`
+  - **Note**: This is useful for gathering opinions from group members.
+
+- **.remind [time] [message]**
+  - **Description**: Sets a reminder for a specified time with a message.
+  - **Usage**: `.

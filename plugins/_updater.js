@@ -1,130 +1,93 @@
-/* Copyright (C) 2022 Sourav KL11.
-Licensed under the  GPL-3.0 License;
-you may not use this file except in compliance with the License.
-Raganork MD - Sourav KL11
-*/
 const simpleGit = require('simple-git');
 const git = simpleGit();
-const {Module} = require('../main');
-const {update} = require('./misc/koyeb');
-const {MessageType} = require('@adiwajshing/baileys');
+const { Module } = require('../main');
+const { update } = require('./misc/koyeb'); // Adjusted for Koyeb, no Heroku
+const { MessageType } = require('@adiwajshing/baileys');
 const Config = require('../config');
-const {fixHerokuAppName} = require('./manage');
-const exec = require('child_process').exec;
-const Heroku = require('heroku-client');
-const { PassThrough } = require('stream');
-const heroku = new Heroku({ token: Config.HEROKU.API_KEY })
 const { skbuffer } = require('raganork-bot');
-var handler = Config.HANDLERS !== 'false'?Config.HANDLERS.split("")[0]:"";
-let isHeroku = Config.HEROKU.API_KEY && Config.HEROKU.APP_NAME
+
+const ownerId = Config.OWNER_ID || 'your-owner-id-here'; // Replace with actual owner ID
+
 Module({
     pattern: 'update ?(.*)',
     fromMe: true,
     desc: "Updates bot",
     use: 'owner'
-}, (async (message, match) => {
+}, async (message, match) => {
     if (match[1] == "start") return;
-    await git.fetch();
-    var commits = await git.log(['main' + '..origin/' + 'main']);
-    var mss = '';
+
+    await git.fetch(); // Fetch the latest changes from GitHub
+    const commits = await git.log(['main' + '..origin/main']); // Check for commits ahead of local
+
     if (commits.total === 0) {
-        mss = "*Bot up to date!*"
-        return await message.sendReply(mss);
-    } else {
-        var changelog = "_Pending updates:_\n\n";
-        for (var i in commits.all){
-        changelog += `${(parseInt(i)+1)}• *${commits.all[i].message}*\n`
+        return await message.sendReply("Bot is up to date!");
     }
+
+    // Prepare the update log
+    let changelog = "_Pending updates:_\n\n";
+    commits.all.forEach((commit, index) => {
+        changelog += `${index + 1}• *${commit.message}*\n`;
+    });
+    changelog += "\nUse `.update start` to apply the updates.";
+
+    const Message = { text: changelog };
+    await message.client.sendMessage(message.jid, Message);
+});
+
+Module({
+    pattern: 'update start',
+    fromMe: true,
+    use: 'owner',
+    dontAddCommandList: true,
+    desc: "Updates bot"
+}, async (message) => {
+    await git.fetch(); // Fetch latest changes from GitHub
+    const commits = await git.log(['main' + '..origin/main']);
+
+    if (commits.total === 0) {
+        return await message.client.sendMessage(message.jid, { text: "Bot is up to date." });
+    }
+
+    // Show confirmation to update
+    const confirmMessage = "Do you want to update all the following changes?\n\n" + commits.all.map((commit, index) => {
+        return `${index + 1}. ${commit.message}`;
+    }).join('\n');
+    
+    // Confirm with the owner
+    await message.client.sendMessage(message.jid, { text: confirmMessage });
+
+    // Wait for confirmation (you can customize this to add a button or prompt for "yes" / "no")
+    const isConfirmed = await getUserConfirmation(message); // Implement your confirmation logic
+
+    if (!isConfirmed) {
+        return await message.sendReply("Update canceled.");
+    }
+
+    // Start the update
+    await message.sendReply("Starting update...");
+
+    // Streamline Git operations for faster updates
+    try {
+        await git.reset('hard', ['origin/main']); // Reset local changes to match remote
+        await git.pull(); // Pull latest changes
+
+        // Optional: You can run build or install commands after the update (like npm install)
+        // await execSync('npm install');
+
+        await message.sendReply("Successfully updated!");
+    } catch (error) {
+        console.error("Update failed: ", error);
+        await message.sendReply("Update failed! Please check the logs.");
+    }
+});
+
+// Function to get user confirmation for updates (you can implement your own logic for this)
+async function getUserConfirmation(message) {
+    // Example confirmation logic
+    // You could send a message asking for confirmation and then check the response
+    const response = await message.client.waitForMessage(message.jid, 30 * 1000); // Wait for 30 seconds for response
+    if (response && response.body.toLowerCase() === 'yes') {
+        return true;
+    }
+    return false;
 }
-        changelog+=`\n_Use ".update start" to start the update_`
-          const Message = {
-              text: changelog
-            }
-    return await message.client.sendMessage(message.jid,Message)   
-}));
-Module({pattern: 'update start',use: 'owner', fromMe: true,dontAddCommandList: true, desc: "Updates bot"}, (async (message, match) => {
-    await git.fetch();
-    var commits = await git.log(['main' + '..origin/' + 'main']);
-    if (commits.total === 0) {
-        return await message.client.sendMessage(message.jid, { text:"_Bot up to date_"})
-
-        } 
-    if (!__dirname.startsWith("/rgnk") && !isHeroku){
-        await require("simple-git")().reset("hard",["HEAD"])
-        await require("simple-git")().pull()
-        await message.sendReply("_Successfully updated. Please manually update npm modules if applicable!_")
-        process.exit(0);    
-        }
-        else if (isHeroku) {
-            await fixHerokuAppName(message)
-            await message.client.sendMessage(message.jid, { text:"_Started update.._"})
-
-            try {
-                var app = await heroku.get('/apps/' + Config.HEROKU.APP_NAME)
-            } catch {
-                await message.client.sendMessage(message.jid, { text:"Heroku information wrong!"})
-
-                await new Promise(r => setTimeout(r, 1000));
-            }
-            git.fetch('upstream', 'main');
-            git.reset('hard', ['FETCH_HEAD']);
-
-            var git_url = app.git_url.replace(
-                "https://", "https://api:" + Config.HEROKU.API_KEY + "@"
-            )
-            
-            try {
-                await git.addRemote('heroku', git_url);
-            } catch { console.log(''); }
-            await git.push('heroku', 'main');
-
-            await message.client.sendMessage(message.jid, { text:"_Successfully updated_"})
-           await message.client.sendMessage(message.jid, { text:"_Restarting_"})
-            } else {
-                await update("UPDATER",'default')
-                await message.client.sendMessage(message.jid, { text:"_Update started!_"})
-    }
-    }));
-Module({pattern: 'updt',use: 'owner', fromMe: true,dontAddCommandList: true, desc: "Updates bot"}, (async (message, match) => {
-    await git.fetch();
-    var commits = await git.log(['main' + '..origin/' + 'main']);
-    if (commits.total === 0) {
-        return await message.client.sendMessage(message.jid, { text:"_Bot up to date_"})
-
-        } 
-    if (!__dirname.startsWith("/rgnk") && !isHeroku){
-        await require("simple-git")().reset("hard",["HEAD"])
-        await require("simple-git")().pull()
-        await message.sendReply("_Successfully updated. Please manually update npm modules if applicable!_")
-        process.exit(0);    
-        }
-        else if (isHeroku) {
-            await fixHerokuAppName(message)
-            await message.client.sendMessage(message.jid, { text:"_Started update.._"})
-
-            try {
-                var app = await heroku.get('/apps/' + Config.HEROKU.APP_NAME)
-            } catch {
-                await message.client.sendMessage(message.jid, { text:"Heroku information wrong!"})
-
-                await new Promise(r => setTimeout(r, 1000));
-            }
-            git.fetch('upstream', 'main');
-            git.reset('hard', ['FETCH_HEAD']);
-
-            var git_url = app.git_url.replace(
-                "https://", "https://api:" + Config.HEROKU.API_KEY + "@"
-            )
-            
-            try {
-                await git.addRemote('heroku', git_url);
-            } catch { console.log(''); }
-            await git.push('heroku', 'main');
-
-            await message.client.sendMessage(message.jid, { text:"_Successfully updated_"})
-           await message.client.sendMessage(message.jid, { text:"_Restarting_"})
-            } else {
-                await update("UPDATER",'default')
-                await message.client.sendMessage(message.jid, { text:"_Update started!_"})
-    }
-    }));
